@@ -1,17 +1,12 @@
-'use client';
+export default function Home() {
+  return (
+    <div>
 
-import SwaggerUI from 'swagger-ui-react';
-import 'swagger-ui-react/swagger-ui.css';
+    <h1 className="text-3xl font-bold underline">
+      Hello world!
+    </h1>
+    <a href="/auth/sign-in">Login</a>
+    </div>
 
-export default function DocsPage() {
-    return (
-        <html>
-            <body>
-
-                <main style={{ padding: 16 }}>
-                    <SwaggerUI url="/docs.yaml" docExpansion="list" defaultModelsExpandDepth={1} />
-                </main>
-            </body>
-        </html>
-    );
+  )
 }
