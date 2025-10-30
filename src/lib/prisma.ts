@@ -1,10 +1,11 @@
+import { PrismaClient } from "@prisma/client";
+import { PrismaClient as EdgePrismaClient } from "@prisma/client/edge";
+import { withAccelerate } from "@prisma/extension-accelerate";
 
-import { PrismaClient } from '@prisma/client/edge'
-import { withAccelerate } from '@prisma/extension-accelerate'
+const isAccelerate = process.env.DATABASE_URL?.startsWith("prisma://");
 
-const prisma = new PrismaClient({
-     datasourceUrl: process.env.DATABASE_URL, // prisma+postgr
-}).$extends(withAccelerate())
-
-
-export { prisma };
+export const prisma = isAccelerate
+  ? new EdgePrismaClient({
+      datasourceUrl: process.env.DATABASE_URL,
+    }).$extends(withAccelerate())
+  : new PrismaClient();
