@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     const found = questions.length;
     const expected = phase.questionCountExpected ?? null;
-    const labels = questions.map((q) => q.numberLabel);
+    const labels = questions.map((q: { numberLabel: any; }) => q.numberLabel);
 
     // 3) Duplicatas de numberLabel
     const duplicateMap = new Map<string, number>();
@@ -58,10 +58,10 @@ export async function POST(req: NextRequest) {
       .map(([label]) => label);
 
     // 4) Faltantes (se rótulos forem todos inteiros)
-    const numeric = labels.every((l) => /^\d+$/.test(l));
+    const numeric = labels.every((l: string) => /^\d+$/.test(l));
     const missingNumbers: string[] = [];
     if (numeric) {
-      const nums = labels.map((l) => Number(l)).sort((a, b) => a - b);
+      const nums = labels.map((l: any) => Number(l)).sort((a: number, b: number) => a - b);
       const have = new Set(nums);
       // estratégia: se há "expected", checamos 1..expected;
       // caso contrário, usamos range min..max (útil p/ apontar furos internos)
