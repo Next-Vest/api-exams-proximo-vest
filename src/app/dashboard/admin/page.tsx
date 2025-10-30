@@ -1,21 +1,14 @@
-"use client";
-import { authClient } from "@/lib/auth-client";
-import { useEffect, useState } from "react";
+import { requireAuth } from "../../../utils/auth-guard"
 
-export default function AdminPage() {
-  const [can, setCan] = useState(false);
+export default async function AdminPage() {
+  const session = await requireAuth()
+  return (
+    <div>
+        <div>Olá, {session.user.name}</div>
+        <div>Bem-vindo à área administrativa.</div>
+    </div>
+  )
+  
+  
 
-  useEffect(() => {
-    const result = authClient.admin.checkRolePermission({
-      role: "user",
-      permissions: { exam: ["publish"] },
-    });
-    setCan(result);
-  }, []);
-
-  if (!can) {
-    return <p>Você não tem acesso a esta página.</p>;
-  }
-
-  return <p>Bem-vindo, Admin!</p>;
 }

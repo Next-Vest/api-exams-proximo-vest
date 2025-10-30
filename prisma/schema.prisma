@@ -251,6 +251,10 @@ model User {
   banReason  String?
   banExpires DateTime?
 
+
+  roles           UserRole[]
+  directPerms     UserPermission[]
+
   @@unique([email])
   @@map("user")
 }
@@ -300,4 +304,67 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique          // "admin", "editor"
+  description String?
+  // opcional: guard para escopo/tenant
+  isActive    Boolean          @default(true)
+
+  users       UserRole[]
+  perms       RolePermission[]
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Permission {
+  id        String  @id @default(cuid())
+  resource  String              // "exam"
+  action    String              // "publish"
+  // chave canônica opcional
+  key       String  @unique     // "exam.publish"
+  // opcional: escopo/tenant
+  isActive  Boolean @default(true)
+
+  roles     RolePermission[]
+  users     UserPermission[]
+
+  @@index([resource, action])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  granted      Boolean @default(true)
+
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model UserRole {
+  userId  String
+  roleId  String
+
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role    Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model UserPermission {
+  userId       String
+  permissionId String
+  granted      Boolean @default(true)
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
 }
