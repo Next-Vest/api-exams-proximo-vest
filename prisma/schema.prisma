@@ -1,0 +1,243 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========== Enums ==========
+enum OptionKey {
+  A
+  B
+  C
+  D
+  E
+}
+
+enum QuestionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum Difficulty {
+  VERY_EASY
+  EASY
+  MEDIUM
+  HARD
+  VERY_HARD
+}
+
+// ========== Catálogo (Board → Edition → Phase) ==========
+model ExamBoard {
+  id       Int           @id @default(autoincrement())
+  slug     String        @unique           // "enem" | "unicamp" | "fuvest" | ...
+  name     String
+
+  editions ExamEdition[]
+  @@index([slug])
+}
+
+model ExamEdition {
+  id           Int         @id @default(autoincrement())
+  examBoardId  Int
+  year         Int
+  editionLabel String       // ex.: "2025", "2024 D1", "1º Sem/2026"
+  notes        String?
+
+  board  ExamBoard @relation(fields: [examBoardId], references: [id], onDelete: Cascade)
+  phases ExamPhase[]
+
+  @@unique([examBoardId, year, editionLabel])
+  @@index([examBoardId, year])
+}
+
+model ExamPhase {
+  id                    Int      @id @default(autoincrement())
+  examEditionId         Int
+  phaseNumber           Int      // 1, 2, ...
+  dayNumber             Int?     // dia 1, dia 2... (quando aplicável)
+  subjectBlock          String?  // "Conhecimentos Gerais", etc.
+  questionCountExpected Int?
+  defaultOptionCount    Int?     // 4 ou 5 (padrão para MCQ; validação via app)
+  isDiscursive          Boolean  @default(false)
+
+  edition   ExamEdition @relation(fields: [examEditionId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@index([examEditionId])
+  @@unique([examEditionId, phaseNumber, dayNumber])
+}
+
+// ========== Matriz Curricular ==========
+model Subject {
+  id        Int                @id @default(autoincrement())
+  name      String
+  slug      String             @unique
+
+  questions QuestionSubject[]
+  @@index([slug])
+}
+
+model Skill {
+  id        Int                @id @default(autoincrement())
+  code      String?            @unique
+  label     String
+
+  questions QuestionSkill[]
+}
+
+// ========== Estímulos (textos/figuras) ==========
+model Stimulus {
+  id          Int              @id @default(autoincrement())
+  contentHtml String?          // rich text (HTML)
+  contentText String?          // versão plain p/ busca
+  sourceRef   String?          // legenda/ref curta
+
+  assets   StimulusAsset[]
+  questions Question[]
+}
+
+model StimulusAsset {
+  id         Int      @id @default(autoincrement())
+  stimulusId Int
+  storageKey String   // ex.: s3://... ou /cdn/...
+  caption    String?
+  pageHint   Int?
+
+  stimulus Stimulus @relation(fields: [stimulusId], references: [id], onDelete: Cascade)
+
+  @@index([stimulusId])
+}
+
+// ========== Questões ==========
+model Question {
+  id              Int             @id @default(autoincrement())
+  examPhaseId     Int
+  stimulusId      Int?
+  numberLabel     String          // "1", "23", "Q.17"...
+  isDiscursive    Boolean         @default(false)
+  difficulty      Difficulty?
+  status          QuestionStatus  @default(DRAFT)
+  sourcePageStart Int?
+  sourcePageEnd   Int?
+
+  // timestamps (úteis pra auditoria; opcionais)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  phase    ExamPhase @relation(fields: [examPhaseId], references: [id], onDelete: Cascade)
+  stimulus Stimulus? @relation(fields: [stimulusId], references: [id], onDelete: SetNull)
+
+  // vínculos
+  subjects QuestionSubject[]
+  skills   QuestionSkill[]
+
+  // tipo (1–1 exclusivo)
+  mcq McqItem?
+  fr  FrItem?
+
+  @@unique([examPhaseId, numberLabel]) // numeração única dentro da fase
+  @@index([examPhaseId])
+}
+
+model QuestionSubject {
+  questionId Int
+  subjectId  Int
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  subject  Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, subjectId])
+  @@index([subjectId])
+}
+
+model QuestionSkill {
+  questionId Int
+  skillId    Int
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  skill    Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, skillId])
+  @@index([skillId])
+}
+
+// ========== Múltipla Escolha (MCQ) ==========
+model McqItem {
+  questionId       Int       @id
+  shuffleOptions   Boolean   @default(true)
+  optionCount      Int       // 4 ou 5 (valide no app)
+  correctOptionKey OptionKey // gabarito único (sem variação por caderno)
+
+  question Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  options  McqOption[]
+}
+
+model McqOption {
+  id         Int       @id @default(autoincrement())
+  questionId Int
+  label      OptionKey // A..E
+  textHtml   String?
+  textPlain  String?
+
+  mcq McqItem @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+
+  @@unique([questionId, label])
+  @@index([questionId])
+}
+
+// ========== Discursiva (Free Response) ==========
+model FrItem {
+  questionId         Int       @id
+  answerGuidanceHtml String?   // orientação geral ao avaliador
+  maxScore           Decimal?  // nota máxima (ex.: 4.0, 10.0)
+
+  question        Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  rubrics         FrRubric[]         // critérios/níveis (opcional)
+  expectedAnswers FrAnswerExpected[] // respostas esperadas por subitem (a/b/c...)
+}
+
+// Subitens de resposta esperada (a/b/c...) com texto oficial e pontuação parcial
+model FrAnswerExpected {
+  id         Int      @id @default(autoincrement())
+  frItemId   Int
+  label      String?  // "a)", "b)", "c)"...
+  answerHtml String?  // resposta esperada/desenvolvimento
+  maxScore   Decimal? // pontuação do subitem (soma pode = maxScore da questão)
+
+  frItem FrItem @relation(fields: [frItemId], references: [questionId], onDelete: Cascade)
+
+  @@index([frItemId])
+}
+
+model FrRubric {
+  id         Int     @id @default(autoincrement())
+  questionId Int
+  criterion  String
+  levelsJson Json    // níveis/descritores (estrutura livre)
+
+  fr FrItem @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+
+model ApiKey {
+  id           Int       @id @default(autoincrement())
+  name         String    // Ex: "Script de Importação", "Painel Admin"
+  key          String    @unique
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+  usageCount   Int       @default(0)
+}
