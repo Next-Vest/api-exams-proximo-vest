@@ -4,7 +4,7 @@ type Board = { id: number; name: string; slug: string };
 
 export default async function AdminPage() {
     const session = await requireAuthWithRole("admin")
-    const res = await fetch(`http://localhost:3000/api/exam-board/list`, {
+    const res = await fetch(`${process.env.API_URL}/exam-board/list`, {
 
         next: { revalidate: 60 }, // cache incremental
     });

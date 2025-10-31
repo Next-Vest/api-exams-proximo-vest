@@ -5,7 +5,7 @@ import { authClient } from "../../lib/auth-client"
 
 export default async function UserBadge() {
   const { data: session } = authClient.useSession()
-  if (!session) return <a href="/sign-in">Entrar</a>
+  if (!session) return <a href="/auth/sign-in">Entrar</a>
 
   return (
     <div className="flex gap-2 items-center">

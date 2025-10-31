@@ -18,7 +18,7 @@ export default async function AdminPage({
     const session = await requireAuthWithRole("admin")
     const { id } = await params
     console.log(id)
-    const res = await fetch(`http://localhost:3000/api/exam-board/${id}`, {
+    const res = await fetch(`${process.env.API_URL}/exam-board/${id}`, {
 
         next: { revalidate: 60 }, // cache incremental
     });
@@ -26,7 +26,7 @@ export default async function AdminPage({
 
     if (!res.ok) throw new Error('Falha ao buscar boards');
 
-    const resTable = await fetch(`http://localhost:3000/api/exam-edition/list?examBoardId=${id}`, {
+    const resTable = await fetch(`${process.env.API_URL}/exam-edition/list?examBoardId=${id}`, {
 
         next: { revalidate: 60 }, // cache incremental
     });
