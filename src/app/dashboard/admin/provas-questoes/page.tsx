@@ -13,7 +13,6 @@ export default async function AdminPage() {
 
     const boards = await res.json();
     return (
-
         <div>
             <table className="min-w-full border">
                 <thead>
