@@ -1,14 +1,9 @@
-// Ex.: em um componente de topo (Client Component)
-"use client"
-import { authClient } from "../../lib/auth-client"
+import { requireAuth } from "../../utils/auth-guard"
 
-
-export default async function UserBadge() {
-  const { data: session } = authClient.useSession()
-  if (!session) return <a href="/auth/sign-in">Entrar</a>
-
+export default async function AdminPage() {
+  const session = await requireAuth()
   return (
-    <div className="flex gap-2 items-center">
+   <div className="flex gap-2 items-center">
       <span>{session.user.name}</span>
       <br />
       <span>{session.user.email}</span>
@@ -16,7 +11,10 @@ export default async function UserBadge() {
         <span>({session.user.role})</span>  
       <br />
       <a href="/dashboard/admin/provas-questoes">Provas e questões</a>
-      <button onClick={() => authClient.signOut()}>Sair</button>
+
     </div>
   )
+  
+  
+
 }
