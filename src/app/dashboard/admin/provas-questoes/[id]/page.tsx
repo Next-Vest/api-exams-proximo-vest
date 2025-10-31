@@ -1,13 +1,13 @@
 import { requireAuthWithRole } from "../../../../../utils/auth-guard"
 export const revalidate = 0; // ou, por ex., 60
-type Board = { 
+type Board = {
     id: number;
     examBoardId: number;
     year: number;
     slug: string
     editionLabel: string;
     notes: string
-        
+
 };
 
 export default async function AdminPage({
@@ -17,10 +17,7 @@ export default async function AdminPage({
 }) {
     const session = await requireAuthWithRole("admin")
     const { id } = await params
-    console.log(id)
     const res = await fetch(`${process.env.API_URL}/exam-board/${id}`, {
-
-        next: { revalidate: 60 }, // cache incremental
     });
 
 
@@ -28,7 +25,7 @@ export default async function AdminPage({
 
     const resTable = await fetch(`${process.env.API_URL}/exam-edition/list?examBoardId=${id}`, {
 
-        next: { revalidate: 60 }, // cache incremental
+
     });
 
 
@@ -36,7 +33,7 @@ export default async function AdminPage({
 
     const board = await res.json();
     const editions = await resTable.json();
-   
+
     return (
 
         <div>
@@ -51,20 +48,24 @@ export default async function AdminPage({
                     </tr>
                 </thead>
                 <tbody>
-                            {editions.map((board: Board) => (
+                    {editions.map((board: Board) => (
                         <tr key={board.id}>
                             <td className="border px-2 py-1">{board.id}</td>
                             <td className="border px-2 py-1">{board.editionLabel}</td>
                             <td className="border px-2 py-1">{board.year}</td>
-                            <td className="border px-2 py-1"><a href={`/dashboard/admin/provas-questoes/${board.id}`}>
+                            <td className="border px-2 py-1"><a href={`/dashboard/admin/provas-questoes/${board.examBoardId}/${board.id}`}>
                                 Ver questões
                             </a>
                             </td>
                         </tr>
                     ))}
-                  
+
                 </tbody>
+
             </table>
+            <a href={`/dashboard/admin/provas-questoes/${board.id}/createEdtion`}>
+                Criar Edição
+            </a>
         </div>
     )
 

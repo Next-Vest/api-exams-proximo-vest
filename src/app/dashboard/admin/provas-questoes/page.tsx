@@ -5,8 +5,6 @@ type Board = { id: number; name: string; slug: string };
 export default async function AdminPage() {
     const session = await requireAuthWithRole("admin")
     const res = await fetch(`${process.env.API_URL}/exam-board/list`, {
-
-        next: { revalidate: 60 }, // cache incremental
     });
 
     if (!res.ok) throw new Error('Falha ao buscar boards');
@@ -35,6 +33,7 @@ export default async function AdminPage() {
                     ))}
                 </tbody>
             </table>
+            <a href="/dashboard/admin/provas-questoes/createVest">Create Vestibular</a>
         </div>
     )
 
