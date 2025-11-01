@@ -1,11 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { CircleCheck, Loader, EllipsisVertical } from "lucide-react";
-import { toast } from "sonner";
 import { z } from "zod";
-
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,39 +9,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+
 
 import { DataTableColumnHeader } from "../../../../../components/data-table/data-table-column-header";
-
+import { toast } from "sonner";
 import { sectionSchema } from "./schema";
 import { TableCellViewer } from "./table-cell-viewer";
 
+async function handleDelete(itemId: number) {
+  try {
+    const res = await fetch(`/api/exam-board/${itemId}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) throw new Error("Erro ao deletar o item");
+
+    toast.success("Item deletado com sucesso!");
+    // Opcional: atualizar página ou tabela
+    window.location.reload();
+  } catch (err) {
+    console.error(err);
+    toast.error("Falha ao deletar o item");
+  }
+}
 export const dashboardColumns: ColumnDef<z.infer<typeof sectionSchema>>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+
   {
     accessorKey: "name",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Nome da Prova" />,
@@ -58,7 +57,7 @@ export const dashboardColumns: ColumnDef<z.infer<typeof sectionSchema>>[] = [
   
   {
     id: "actions",
-    cell: () => (
+    cell: ({ row }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="data-[state=open]:bg-muted text-muted-foreground flex size-8" size="icon">
@@ -66,12 +65,33 @@ export const dashboardColumns: ColumnDef<z.infer<typeof sectionSchema>>[] = [
             <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+     <DropdownMenuContent align="end" className="w-32">
+        <DropdownMenuItem onClick={() => console.log("Editar")}>Edit</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        
+        {/* Trigger do modal */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem variant="destructive" onSelect={(e) => e.preventDefault()}>
+              Delete
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Essa ação não poderá ser desfeita. O item será permanentemente removido.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={() => handleDelete(row.original.id)}>Deletar</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DropdownMenuContent>
+    </DropdownMenu>
     ),
     enableSorting: false,
   },

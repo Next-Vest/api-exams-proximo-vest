@@ -54,6 +54,12 @@ export const sidebarItems: NavGroup[] = [
         icon: SquareArrowUpRight,
         comingSoon: false,
       },
+            {
+        title: "Users",
+        url: "/dashboard/users",
+        icon: Users,
+        comingSoon: false,
+      },
     ],
   },
   {
