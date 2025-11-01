@@ -45,6 +45,6 @@ export async function requireAuthWithRole(role: string) {
   const session = await auth.api.getSession({ headers: hdrsObj });
   if (!session?.user?.id) redirect("/auth/sign-in");
   const ok = await hasRole(session.user.id as string, role);
-  if (!ok) redirect("/unauthorized");
+  if (!ok) redirect("/dashboard/default");
   return session;
 }
