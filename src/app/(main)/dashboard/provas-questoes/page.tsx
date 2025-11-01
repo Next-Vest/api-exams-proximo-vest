@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 type Board = { id: number; name: string; slug: string };
 export default async function Provas() {
-  requireAuthWithRole("Admin");
+  await requireAuthWithRole("Admin");
   const res = await fetch(`${process.env.API_URL}/exam-board/list`, {
   });
 
