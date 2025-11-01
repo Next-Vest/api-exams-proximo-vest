@@ -46,6 +46,18 @@ export interface NavGroup {
 export const sidebarItems: NavGroup[] = [
   {
     id: 1,
+    label: "Administrator",
+    items: [
+      {
+        title: "Provas",
+        url: "/dashboard/provas-questoes",
+        icon: SquareArrowUpRight,
+        comingSoon: false,
+      },
+    ],
+  },
+  {
+    id: 2,
     label: "Dashboards",
     items: [
       {
@@ -90,7 +102,7 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
   {
-    id: 2,
+    id: 3,
     label: "Pages",
     items: [
       {
@@ -135,21 +147,10 @@ export const sidebarItems: NavGroup[] = [
         icon: Lock,
         comingSoon: true,
       },
-      {
-        title: "Authentication",
-        url: "/auth",
-        icon: Fingerprint,
-        subItems: [
-          { title: "Login v1", url: "/auth/v1/login", newTab: true },
-          { title: "Login v2", url: "/auth/v2/login", newTab: true },
-          { title: "Register v1", url: "/auth/v1/register", newTab: true },
-          { title: "Register v2", url: "/auth/v2/register", newTab: true },
-        ],
-      },
     ],
   },
   {
-    id: 3,
+    id: 4,
     label: "Misc",
     items: [
       {
