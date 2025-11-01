@@ -5,14 +5,13 @@ import { admin } from "better-auth/plugins"
 import { ac, role_admin, role_user, role_moderator } from "./auth-permissions";
 
 export const auth = betterAuth({
-    database: prismaAdapter(prisma, {
-        provider: "sqlite", // or "mysql", "postgresql", ...etc
-    }),
-    emailAndPassword: {
-        enabled: true,
-    },
-      
-        plugins: [
+  database: prismaAdapter(prisma, {
+    provider: "sqlite", // or "mysql", "postgresql", ...etc
+  }),
+  emailAndPassword: {
+    enabled: true,
+  },
+  plugins: [
     admin({
       // Quando usa AC custom, você passa ac + roles:
       ac,
@@ -28,5 +27,5 @@ export const auth = betterAuth({
       // impersonationSessionDuration: 60 * 60 * 24, // 1 dia
     }),
   ],
- 
+
 });
